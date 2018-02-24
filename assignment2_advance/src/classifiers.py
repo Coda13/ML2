@@ -26,28 +26,37 @@ def softmax(logits, y):
     #                           BEGIN OF YOUR CODE                            #
     ###########################################################################
 
-    # Get the number of examples.
-    n = logits.shape[0]
 
-    # Set up variable logC to reduce numerical instability.
-    logC = -np.max(logits, axis=1, keepdims = True)
-    logitsReduced = logits + logC
-    expLogitsReduced = np.exp(logitsReduced)
-    sumExpLogitsReduced = np.sum(expLogitsReduced, axis = 1, keepdims = True)
+    #Create LogK to reduce numerical instability
+    #axis=1 take the Max for each line
+    #Keep the same dimension as logits
+    logK = -np.max(logits, axis=1, keepdims = True)
+
+    logitsStable = logits + logK
+
+    expLogitsStable = np.exp(logitsStable)
+
+    #Sum each term of the matrix result from logitsStable
+    sumExpLogitsStable = np.sum(expLogitsStable,axis = 1, keepdims = True)
 
     # Get normalisedProbability of all the classes for each example.
-    normProbabilities = expLogitsReduced / sumExpLogitsReduced
+    normalisedProb = expLogitsStable / sumExpLogitsStable
 
-    # Get the probabilities assigned to the correct class for each example,
-    # and then compute the loss (no regularisation needs to occur).
-    correctLogProbabilities = -np.log(normProbabilities[range(n), y])
-    loss = np.sum(correctLogProbabilities) / n
+    # Get the number of examples.
+    N = logits.shape[0]
+
+    # Get each probability for each class assigned
+    #Create a new Matrix according to each class
+    logProb = -np.log(normalisedProb[range(N), y])
+
+    #Calculation of loss
+    loss = np.sum(logProb) / N
 
     # Get the gradients of the logits from the formula:
     # dLi / dfk = pk - 1(yi = k).
-    dlogits = normProbabilities
-    dlogits[range(n), y] -= 1
-    dlogits /= n
+    dlogits = normalisedProb
+    dlogits[range(N), y] -= 1
+    dlogits /= N
     
 
 
