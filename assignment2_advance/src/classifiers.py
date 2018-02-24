@@ -26,12 +26,28 @@ def softmax(logits, y):
     #                           BEGIN OF YOUR CODE                            #
     ###########################################################################
 
-    logC = - np.max(logits, axis=1, keepdims = True)
+    # Get the number of examples.
+    n = logits.shape[0]
 
-    p = np.exp(logits + logC)/(np.sum(np.exp(logits+logC)))
+    # Set up variable logC to reduce numerical instability.
+    logC = -np.max(logits, axis=1, keepdims = True)
+    logitsReduced = logits + logC
+    expLogitsReduced = np.exp(logitsReduced)
+    sumExpLogitsReduced = np.sum(expLogitsReduced, axis = 1, keepdims = True)
 
-    loss = - np.log(p,y)
+    # Get normalisedProbability of all the classes for each example.
+    normProbabilities = expLogitsReduced / sumExpLogitsReduced
 
+    # Get the probabilities assigned to the correct class for each example,
+    # and then compute the loss (no regularisation needs to occur).
+    correctLogProbabilities = -np.log(normProbabilities[range(n), y])
+    loss = np.sum(correctLogProbabilities) / n
+
+    # Get the gradients of the logits from the formula:
+    # dLi / dfk = pk - 1(yi = k).
+    dlogits = normProbabilities
+    dlogits[range(n), y] -= 1
+    dlogits /= n
     
 
 
